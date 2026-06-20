@@ -7,29 +7,10 @@ import { useState, useRef, useEffect } from 'react';
 
 export default function AICoachChat() {
   const [isOpen, setIsOpen] = useState(false);
-  const { messages, append, isLoading } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
     api: '/api/chat',
   });
-  const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const submitMessage = () => {
-    if (!input.trim() || isLoading) return;
-    append({ role: 'user', content: input });
-    setInput('');
-  };
-
-  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    submitMessage();
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      submitMessage();
-    }
-  };
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -131,25 +112,20 @@ export default function AICoachChat() {
 
             {/* Input Area */}
             <form
-              onSubmit={handleFormSubmit}
+              onSubmit={handleSubmit}
               className="p-4 bg-white border-t border-slate-100 shrink-0"
             >
               <div className="relative flex items-center">
                 <input
                   type="text"
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
+                  onChange={handleInputChange}
                   placeholder="Ask for advice..."
                   className="w-full pl-5 pr-14 py-4 rounded-2xl bg-slate-100 border-none outline-none text-slate-900 text-sm font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500/20 transition-shadow"
                 />
                 <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    submitMessage();
-                  }}
-                  disabled={isLoading || !(input || '').trim()}
+                  type="submit"
+                  disabled={isLoading || !input.trim()}
                   className="absolute right-2 w-10 h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white flex items-center justify-center transition-colors shadow-sm cursor-pointer z-10"
                 >
                   <Send className="w-4 h-4 ml-1" />
