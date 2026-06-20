@@ -1,75 +1,151 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Brain, Activity, Moon, BatteryWarning, CheckCircle, XCircle, LineChart, Zap, ListTodo } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+
+const MOTIVATIONAL_LINES = [
+  "BREAK THE CYCLE.",
+  "RECLAIM YOUR FOCUS.",
+  "MASTER YOUR DAYS.",
+  "NO MORE EXCUSES.",
+];
 
 export function LandingPage() {
-  const fadeUpVariant = {
-    hidden: { opacity: 0, y: 40 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } }
+  const [quoteIndex, setQuoteIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setQuoteIndex((prev) => (prev + 1) % MOTIVATIONAL_LINES.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 80, scale: 0.9, rotateX: 10 },
+    visible: { opacity: 1, y: 0, scale: 1, rotateX: 0, transition: { type: "spring" as const, stiffness: 100, damping: 20 } }
+  };
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.2 } }
   };
 
   return (
-    <div className="bg-[#FAFAFA] min-h-screen font-sans text-slate-900 selection:bg-slate-800 selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#FDFBF7] font-sans text-slate-900 selection:bg-amber-400 selection:text-slate-900 overflow-x-hidden relative">
       
-      {/* Background ambient noise/gradient */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-slate-200/40 blur-[120px]" />
-        <div className="absolute bottom-[20%] right-[-10%] w-[30%] h-[40%] rounded-full bg-blue-100/30 blur-[100px]" />
+      {/* MASSIVE Scrolling Background Text */}
+      <div className="fixed inset-0 overflow-hidden flex items-center justify-center pointer-events-none z-0 opacity-[0.03]">
+        <AnimatePresence mode="wait">
+          <motion.h1
+            key={quoteIndex}
+            initial={{ opacity: 0, scale: 0.9, x: '20vw' }}
+            animate={{ opacity: 1, scale: 1, x: '-20vw' }}
+            exit={{ opacity: 0, scale: 1.1, x: '-40vw' }}
+            transition={{ duration: 5, ease: "linear" }}
+            className="text-[15vw] font-black tracking-tighter text-slate-900 whitespace-nowrap"
+          >
+            {MOTIVATIONAL_LINES[quoteIndex]}
+          </motion.h1>
+        </AnimatePresence>
       </div>
 
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-6 bg-[#FAFAFA]/70 backdrop-blur-xl border-b border-slate-200/50">
-        <div className="flex items-center gap-2 font-bold text-xl tracking-tight z-10">
-          <Brain className="w-6 h-6 text-slate-800" />
+      {/* Soft Animated Background Orbs */}
+      <motion.div 
+        animate={{ 
+          x: ["-5vw", "10vw", "-5vw"], 
+          y: ["-10vh", "10vh", "-10vh"],
+          scale: [1, 1.2, 1],
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+        className="fixed top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-[40%_60%_70%_30%] bg-amber-300/30 blur-[120px] pointer-events-none z-0 mix-blend-multiply" 
+      />
+      <motion.div 
+        animate={{ 
+          x: ["10vw", "-5vw", "10vw"], 
+          y: ["10vh", "-10vh", "10vh"],
+          scale: [1.2, 1, 1.2],
+        }}
+        transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+        className="fixed bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-[60%_40%_30%_70%] bg-rose-300/30 blur-[120px] pointer-events-none z-0 mix-blend-multiply" 
+      />
+      <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] pointer-events-none z-0"></div>
+
+      {/* Premium Seamless Navigation */}
+      <motion.nav 
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ type: "spring", stiffness: 100, damping: 20 }}
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 md:px-12 py-8 bg-transparent pointer-events-auto mix-blend-multiply"
+      >
+        <div className="flex items-center gap-4 font-black text-3xl tracking-tighter z-10 text-slate-900">
+          <motion.div whileHover={{ rotate: 15, scale: 1.1 }} transition={{ type: "spring" }}>
+            <Brain className="w-10 h-10 text-amber-500" />
+          </motion.div>
           <span>FixMe</span>
         </div>
-        <div className="flex items-center gap-4 z-10">
-          <Button variant="ghost" className="text-slate-600 font-medium hover:bg-slate-200/50">Log in</Button>
-          <Button className="bg-slate-900 text-white hover:bg-slate-800 rounded-full px-6 font-medium shadow-sm">Get Started</Button>
+        <div className="flex items-center gap-6 z-10">
+          <Link href="/login">
+            <Button variant="ghost" className="text-slate-600 font-bold hover:bg-slate-200/50 hover:text-slate-900 text-lg px-6 rounded-full transition-colors">Log in</Button>
+          </Link>
+          <Link href="/signup">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button className="bg-slate-900 text-white hover:bg-slate-800 rounded-full px-10 py-7 text-lg font-bold shadow-[0_10px_20px_rgba(0,0,0,0.1)] border-2 border-slate-800">
+                Get Started
+              </Button>
+            </motion.div>
+          </Link>
         </div>
-      </nav>
+      </motion.nav>
 
       {/* Main Content */}
-      <main className="relative z-10">
+      <main className="relative z-10 pt-48">
         
         {/* HERO SECTION */}
-        <section className="pt-48 pb-32 px-6 flex flex-col items-center text-center max-w-4xl mx-auto">
+        <section className="pb-40 px-6 flex flex-col items-center text-center max-w-5xl mx-auto">
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm text-slate-600 text-sm font-semibold mb-8"
+            initial={{ opacity: 0, y: -20, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+            className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-white/60 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-slate-700 text-sm font-bold mb-12 uppercase tracking-widest"
           >
-            <span className="w-2 h-2 rounded-full bg-slate-800 animate-pulse" />
-            Not just another habit tracker
+            <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse ring-4 ring-rose-500/20" />
+            Your Personal Operating System
           </motion.div>
           
           <motion.h1 
-            initial="hidden" animate="visible" variants={fadeUpVariant}
-            className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1] text-slate-900"
+            initial={{ opacity: 0, y: 50, rotateX: -20 }} 
+            animate={{ opacity: 1, y: 0, rotateX: 0 }} 
+            transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.2 }}
+            className="text-6xl md:text-8xl font-black tracking-tighter mb-8 leading-[1.05] text-slate-900 drop-shadow-sm"
           >
-            Understand why your <br/><span className="text-slate-400">days go wrong.</span>
+            Stop guessing. <br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-500">Start mastering.</span>
           </motion.h1>
           
           <motion.p 
-            initial="hidden" animate="visible" variants={fadeUpVariant}
-            className="text-xl text-slate-500 font-medium max-w-xl mx-auto leading-relaxed mb-16"
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, type: "spring" }}
+            className="text-2xl text-slate-600 font-medium max-w-3xl mx-auto leading-relaxed mb-16"
           >
-            Log daily struggles. Find hidden patterns. Fix recurring problems with AI-powered insights.
+            Don&apos;t just track bad habits. Decode them. FixMe uses AI to uncover the hidden triggers sabotaging your days and generates precise micro-experiments to fix them.
           </motion.p>
           
           <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5, duration: 1 }}
-            className="text-sm text-slate-400 font-semibold flex flex-col items-center gap-4 uppercase tracking-widest"
+            initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.6, type: "spring" }}
           >
-            <span>Scroll down</span>
-            <motion.div 
-              animate={{ y: [0, 10, 0] }}
-              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-              className="w-px h-16 bg-gradient-to-b from-slate-300 to-transparent"
-            />
+            <Link href="/signup">
+              <motion.button 
+                whileHover={{ scale: 1.05, boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)" }} 
+                whileTap={{ scale: 0.95 }}
+                className="px-12 py-6 bg-slate-900 text-white rounded-[2.5rem] text-2xl font-black transition-all border border-slate-700 flex items-center gap-4 group relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-rose-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <span className="relative z-10">Initialize Reboot</span>
+                <ArrowRight className="w-8 h-8 group-hover:translate-x-2 transition-transform relative z-10" />
+              </motion.button>
+            </Link>
           </motion.div>
         </section>
 
@@ -78,302 +154,248 @@ export function LandingPage() {
           
           {/* SECTION 1: The Input */}
           <motion.section 
-            initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUpVariant}
+            initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={cardVariants}
             className="flex flex-col md:flex-row items-center gap-16"
           >
-            <div className="flex-1 space-y-6">
-              <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">It starts with a simple log.</h2>
-              <p className="text-lg text-slate-500 font-medium leading-relaxed">
-                No complex forms or tedious tracking. Just tell us what went wrong today in plain English.
+            <div className="flex-1 space-y-8">
+              <div className="w-20 h-20 bg-gradient-to-br from-amber-100 to-amber-50 rounded-3xl flex items-center justify-center border border-amber-200 shadow-[0_20px_40px_rgba(251,191,36,0.15)] ring-8 ring-amber-50/50">
+                <ListTodo className="w-10 h-10 text-amber-600" />
+              </div>
+              <h2 className="text-5xl md:text-6xl font-black tracking-tighter text-slate-900 leading-tight">Zero friction logging.</h2>
+              <p className="text-2xl text-slate-600 font-medium leading-relaxed">
+                Forget complex forms and guilt-tripping habit streaks. Just brain-dump what derailed you today. We handle the heavy lifting.
               </p>
             </div>
             
-            <div className="flex-1 w-full max-w-md">
-              <div className="bg-white/80 backdrop-blur-2xl border border-slate-200/60 rounded-[2rem] p-8 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.08)] transform rotate-1 hover:rotate-0 transition-transform ring-1 ring-slate-900/5">
-                <div className="flex items-center justify-between mb-6">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Today's Check-in</span>
+            <div className="flex-1 w-full relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-400/20 to-rose-400/20 blur-3xl -z-10 rounded-full" />
+              <motion.div whileHover={{ scale: 1.02, rotateZ: -1 }} className="bg-white/60 backdrop-blur-2xl border border-white/80 rounded-[3rem] p-10 shadow-[0_40px_80px_rgba(0,0,0,0.07)] transform rotate-2 transition-all relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 to-rose-400" />
+                <div className="flex items-center justify-between mb-8">
+                  <span className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" /> Raw Input
+                  </span>
                 </div>
-                <div className="space-y-4">
-                  <div className="p-5 bg-slate-50/80 rounded-2xl border border-slate-100 shadow-inner">
-                    <p className="text-slate-800 font-medium leading-relaxed text-[15px]">"Missed the gym again today. Felt completely drained and couldn't focus."</p>
+                <div className="space-y-6">
+                  <div className="p-8 bg-white/80 rounded-[2rem] border border-slate-100 shadow-sm">
+                    <p className="text-slate-800 font-medium leading-relaxed text-xl italic text-slate-600">&quot;Missed the gym again. Hit the snooze button four times and felt completely drained all morning.&quot;</p>
                   </div>
-                  <div className="flex gap-3">
-                    <div className="flex-1 bg-red-50/50 text-red-600 py-3 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold border border-red-100/50 shadow-sm transition-colors hover:bg-red-50">
-                      <BatteryWarning className="w-4 h-4" />
+                  <div className="flex gap-4">
+                    <div className="flex-1 bg-gradient-to-br from-rose-50 to-white text-rose-600 py-4 rounded-2xl flex items-center justify-center gap-3 text-lg font-bold border border-rose-100 shadow-sm">
+                      <BatteryWarning className="w-6 h-6" />
                       Low Energy
                     </div>
-                    <div className="flex-1 bg-slate-100/50 text-slate-700 py-3 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold border border-slate-200/50 shadow-sm transition-colors hover:bg-slate-100">
-                      <Moon className="w-4 h-4" />
-                      5h Sleep
+                    <div className="flex-1 bg-gradient-to-br from-indigo-50 to-white text-indigo-600 py-4 rounded-2xl flex items-center justify-center gap-3 text-lg font-bold border border-indigo-100 shadow-sm">
+                      <Moon className="w-6 h-6" />
+                      Poor Sleep
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </motion.section>
 
           {/* SECTION 2: The Insight */}
           <motion.section 
-            initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUpVariant}
+            initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={cardVariants}
             className="flex flex-col md:flex-row-reverse items-center gap-16"
           >
-            <div className="flex-1 space-y-6">
-              <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">We connect the dots.</h2>
-              <p className="text-lg text-slate-500 font-medium leading-relaxed">
-                Our AI analyzes your logs over time to find the hidden correlations sabotaging your days.
+            <div className="flex-1 space-y-8">
+              <div className="w-20 h-20 bg-gradient-to-br from-rose-100 to-rose-50 rounded-3xl flex items-center justify-center border border-rose-200 shadow-[0_20px_40px_rgba(244,63,94,0.15)] ring-8 ring-rose-50/50">
+                <LineChart className="w-10 h-10 text-rose-600" />
+              </div>
+              <h2 className="text-5xl md:text-6xl font-black tracking-tighter text-slate-900 leading-tight">Expose the root cause.</h2>
+              <p className="text-2xl text-slate-600 font-medium leading-relaxed">
+                Our AI engine synthesizes your logs to expose the invisible correlations that trigger your worst days. Stop fighting symptoms.
               </p>
             </div>
             
-            <div className="flex-1 w-full max-w-lg group">
-              {/* Premium Card with Animated Glow (Magic UI style) */}
-              <div className="relative rounded-[2rem] p-[1px] overflow-hidden bg-gradient-to-b from-slate-800 to-slate-900 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.5)] transform -rotate-1 group-hover:rotate-0 transition-transform duration-500">
-                
-                {/* Animated Conic Gradient Border effect */}
-                <div className="absolute inset-[-100%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#000000_0%,#94a3b8_50%,#000000_100%)] opacity-30 group-hover:opacity-70 transition-opacity duration-500" />
-                
-                <div className="bg-[#09090b] text-white rounded-[calc(2rem-1px)] p-8 relative h-full w-full overflow-hidden">
-                  
-                  {/* Subtle Background Noise & Lighting */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-64 bg-slate-500/20 rounded-full blur-[80px] opacity-50 mix-blend-screen pointer-events-none" />
-
-                  <div className="flex items-center gap-4 mb-8 relative z-10">
-                    <div className="w-12 h-12 rounded-full bg-[#18181b] flex items-center justify-center border border-white/10 shadow-[0_0_15px_rgba(148,163,184,0.3)]">
-                      <Activity className="w-5 h-5 text-slate-300" />
+            <div className="flex-1 w-full relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-rose-400/20 to-indigo-400/20 blur-3xl -z-10 rounded-full" />
+              <motion.div whileHover={{ scale: 1.02, rotateZ: 1 }} className="bg-slate-900 rounded-[3rem] p-10 shadow-[0_40px_80px_rgba(0,0,0,0.25)] transform -rotate-2 transition-all relative overflow-hidden border border-slate-700">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-rose-500/10 to-indigo-500/10 blur-2xl" />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-6 mb-10">
+                    <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 backdrop-blur-xl shadow-inner">
+                      <Activity className="w-8 h-8 text-rose-400" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-lg tracking-tight text-white/90">Weekly Pattern Detected</h3>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-slate-400/80 text-[11px] font-bold uppercase tracking-widest">Fitness</span>
-                        <span className="text-white/20 text-[10px]">×</span>
-                        <span className="text-slate-400/80 text-[11px] font-bold uppercase tracking-widest">Sleep</span>
+                      <h3 className="font-black text-2xl tracking-tighter text-white">Critical Insight</h3>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-amber-300 text-xs font-bold uppercase tracking-widest bg-amber-500/10 px-2 py-1 rounded-md border border-amber-500/20">Workout</span>
+                        <span className="text-white/30 text-xs">correlated with</span>
+                        <span className="text-indigo-300 text-xs font-bold uppercase tracking-widest bg-indigo-500/10 px-2 py-1 rounded-md border border-indigo-500/20">Screen Time</span>
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="space-y-8 relative z-10">
-                    <p className="text-[26px] font-medium leading-[1.3] tracking-tight text-white/90">
-                      You skip the gym <span className="text-slate-300 font-semibold drop-shadow-[0_0_8px_rgba(148,163,184,0.5)]">85% of the time</span> when you sleep past midnight.
-                    </p>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-[#18181b]/80 rounded-2xl p-4 border border-white/5 backdrop-blur-sm">
-                        <span className="block text-white/40 text-xs font-semibold uppercase tracking-wider mb-1">Avg Energy</span>
-                        <span className="text-2xl font-bold text-white/90">3.2<span className="text-white/40 text-sm">/10</span></span>
-                      </div>
-                      <div className="bg-[#18181b]/80 rounded-2xl p-4 border border-white/5 backdrop-blur-sm">
-                        <span className="block text-white/40 text-xs font-semibold uppercase tracking-wider mb-1">Recovery</span>
-                        <span className="text-2xl font-bold text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.3)]">-42%</span>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-gradient-to-b from-white/[0.08] to-white/[0.02] rounded-2xl p-5 border border-white/[0.05] shadow-inner">
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-[13px] font-semibold text-white/60 tracking-wide uppercase">Late Sleep Impact</span>
-                        <span className="text-[13px] font-bold text-slate-300 bg-slate-500/10 px-2.5 py-1 rounded-full border border-slate-500/20 shadow-[0_0_10px_rgba(148,163,184,0.2)]">High Correlation</span>
-                      </div>
-                      
-                      {/* Premium Sparkline / Progress */}
-                      <div className="relative w-full h-1.5 bg-[#000000] rounded-full overflow-hidden shadow-inner">
-                        <motion.div 
-                          initial={{ width: 0 }}
-                          whileInView={{ width: "85%" }}
-                          transition={{ duration: 1.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                          className="absolute top-0 left-0 h-full rounded-full bg-gradient-to-r from-slate-600 via-slate-400 to-white"
-                        >
-                          {/* Glowing head of progress bar */}
-                          <div className="absolute top-0 right-0 w-4 h-full bg-white blur-[2px]" />
-                        </motion.div>
-                      </div>
-                      <div className="flex justify-between mt-2">
-                        <span className="text-[11px] text-white/30 font-medium">0%</span>
-                        <span className="text-[11px] text-white/30 font-medium">100%</span>
-                      </div>
-                    </div>
-                  </div>
+                  <p className="text-3xl font-bold leading-tight tracking-tight text-white mb-8">
+                    You skip your morning workout <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-amber-400">85% of the time</span> when you use your phone past midnight.
+                  </p>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </motion.section>
 
           {/* SECTION 3: The Fix */}
           <motion.section 
-            initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUpVariant}
+            initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={cardVariants}
             className="flex flex-col items-center text-center max-w-5xl mx-auto"
           >
-            <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-8 border border-green-200/50 shadow-sm ring-4 ring-green-50/50">
-              <ArrowRight className="w-10 h-10 text-green-600 -rotate-45" />
+            <div className="w-24 h-24 bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-[2.5rem] flex items-center justify-center mb-10 border border-emerald-200 shadow-[0_20px_40px_rgba(16,185,129,0.15)] ring-8 ring-emerald-50/50">
+              <Zap className="w-12 h-12 text-emerald-600 fill-emerald-600" />
             </div>
-            <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 text-slate-900">
-              Take action.
+            <h2 className="text-5xl md:text-7xl font-black tracking-tighter mb-8 text-slate-900 leading-tight">
+              Action. Not anxiety.
             </h2>
-            <p className="text-xl text-slate-500 font-medium mb-16 leading-relaxed max-w-3xl mx-auto">
-              Knowledge alone isn't enough. Once FixMe identifies your negative patterns, it generates highly specific, 3-to-5 day micro-experiments designed to break the cycle without overwhelming your willpower.
+            <p className="text-2xl text-slate-600 font-medium mb-20 leading-relaxed max-w-4xl mx-auto">
+              Awareness without action is just anxiety. FixMe prescribes hyper-specific, 3-day micro-experiments designed to break your destructive loops without relying on willpower.
             </p>
             
-            <div className="grid md:grid-cols-3 gap-6 w-full text-left">
-              <div className="bg-white/80 backdrop-blur-2xl border border-slate-200/60 rounded-3xl p-6 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-xl hover:-translate-y-2 transition-all duration-500 ring-1 ring-slate-900/5">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center shadow-inner">
-                    <Zap className="w-5 h-5 text-amber-500 fill-amber-500" />
+            <motion.div variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true }} className="grid md:grid-cols-3 gap-8 w-full text-left">
+              <motion.div variants={cardVariants} whileHover={{ y: -10, scale: 1.02 }} className="bg-white/60 backdrop-blur-2xl border border-white/80 rounded-[2.5rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-full h-1 bg-amber-400 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center shadow-inner">
+                    <Moon className="w-7 h-7 text-amber-600" />
                   </div>
-                  <h4 className="font-bold text-slate-900 text-lg tracking-tight">Experiment #1</h4>
+                  <h4 className="font-black text-slate-900 text-xl tracking-tight">Experiment Alpha</h4>
                 </div>
-                <p className="text-slate-800 font-semibold text-[16px] leading-relaxed mb-6">No phone in bed after 11:30 PM for the next 5 days.</p>
-                <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100 shadow-inner">
-                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">The Strategy</span>
-                  <span className="text-sm font-medium text-slate-600 leading-relaxed">Break the late-night doomscrolling cycle to improve next-day baseline energy.</span>
+                <p className="text-slate-800 font-bold text-xl leading-relaxed mb-8">Ban your phone from the bedroom entirely after 11:30 PM.</p>
+                <div className="bg-white/80 p-6 rounded-2xl border border-slate-100 shadow-sm relative z-10">
+                  <span className="text-xs font-black text-amber-600 uppercase tracking-widest block mb-2">The Architecture</span>
+                  <span className="text-[15px] font-medium text-slate-600 leading-relaxed">Sever the late-night dopamine loop to drastically improve baseline morning energy.</span>
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="bg-white/80 backdrop-blur-2xl border border-slate-200/60 rounded-3xl p-6 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-xl hover:-translate-y-2 transition-all duration-500 ring-1 ring-slate-900/5 md:translate-y-8">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center shadow-inner">
-                    <Activity className="w-5 h-5 text-blue-500" />
+              <motion.div variants={cardVariants} whileHover={{ y: -10, scale: 1.02 }} className="bg-white/60 backdrop-blur-2xl border border-white/80 rounded-[2.5rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all md:translate-y-8 relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-full h-1 bg-indigo-400 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-center shadow-inner">
+                    <Activity className="w-7 h-7 text-indigo-600" />
                   </div>
-                  <h4 className="font-bold text-slate-900 text-lg tracking-tight">Experiment #2</h4>
+                  <h4 className="font-black text-slate-900 text-xl tracking-tight">Experiment Beta</h4>
                 </div>
-                <p className="text-slate-800 font-semibold text-[16px] leading-relaxed mb-6">Pack your gym bag and leave it by the door before 9 PM.</p>
-                <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100 shadow-inner">
-                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">The Strategy</span>
-                  <span className="text-sm font-medium text-slate-600 leading-relaxed">Remove morning friction. Data shows you skip workouts mostly when feeling rushed.</span>
+                <p className="text-slate-800 font-bold text-xl leading-relaxed mb-8">Place your packed gym bag literally blocking your front door.</p>
+                <div className="bg-white/80 p-6 rounded-2xl border border-slate-100 shadow-sm relative z-10">
+                  <span className="text-xs font-black text-indigo-600 uppercase tracking-widest block mb-2">The Architecture</span>
+                  <span className="text-[15px] font-medium text-slate-600 leading-relaxed">Eliminate morning friction points. You fail when you have to think, so remove the choice.</span>
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="bg-white/80 backdrop-blur-2xl border border-slate-200/60 rounded-3xl p-6 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-xl hover:-translate-y-2 transition-all duration-500 ring-1 ring-slate-900/5 md:translate-y-16">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center shadow-inner">
-                    <Brain className="w-5 h-5 text-emerald-500" />
+              <motion.div variants={cardVariants} whileHover={{ y: -10, scale: 1.02 }} className="bg-white/60 backdrop-blur-2xl border border-white/80 rounded-[2.5rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all md:translate-y-16 relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-full h-1 bg-emerald-400 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center shadow-inner">
+                    <Brain className="w-7 h-7 text-emerald-600" />
                   </div>
-                  <h4 className="font-bold text-slate-900 text-lg tracking-tight">Experiment #3</h4>
+                  <h4 className="font-black text-slate-900 text-xl tracking-tight">Experiment Gamma</h4>
                 </div>
-                <p className="text-slate-800 font-semibold text-[16px] leading-relaxed mb-6">Drink 500ml of water immediately upon waking up.</p>
-                <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100 shadow-inner">
-                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">The Strategy</span>
-                  <span className="text-sm font-medium text-slate-600 leading-relaxed">Counteract morning brain fog, which you reported 3 times this week.</span>
+                <p className="text-slate-800 font-bold text-xl leading-relaxed mb-8">Consume 500ml of water within 60 seconds of waking.</p>
+                <div className="bg-white/80 p-6 rounded-2xl border border-slate-100 shadow-sm relative z-10">
+                  <span className="text-xs font-black text-emerald-600 uppercase tracking-widest block mb-2">The Architecture</span>
+                  <span className="text-[15px] font-medium text-slate-600 leading-relaxed">Instantly shock your nervous system to counter the brain fog reported 4x this week.</span>
                 </div>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </motion.section>
-
         </div>
 
-        {/* NEW SECTION: Who is this for? */}
-        <section className="py-32 px-6 bg-slate-900 text-white relative overflow-hidden border-y border-slate-800">
-          <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-slate-500/10 rounded-full blur-[120px] pointer-events-none translate-x-1/3 -translate-y-1/3" />
+        {/* SECTION 4: Who is this for? */}
+        <section className="py-40 px-6 relative z-10">
           <div className="max-w-6xl mx-auto relative z-10">
-            <div className="mb-20 md:w-2/3">
-              <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-6">Who is FixMe built for?</h2>
-              <p className="text-xl text-slate-400 font-medium leading-relaxed">
-                If traditional habit trackers make you feel guilty and productivity apps just add to your to-do list, FixMe is for you. We focus on diagnosing the root cause, not just treating the symptoms.
+            <motion.div 
+              initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={cardVariants}
+              className="mb-24 md:w-2/3"
+            >
+              <h2 className="text-5xl md:text-6xl font-black tracking-tighter mb-8 text-slate-900 leading-tight">Who needs FixMe?</h2>
+              <p className="text-2xl text-slate-600 font-medium leading-relaxed">
+                If traditional planners make you feel inadequate and habit streaks only breed anxiety, this is your escape hatch.
               </p>
-            </div>
+            </motion.div>
             
-            <div className="grid md:grid-cols-2 gap-8">
-              <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUpVariant} className="bg-white/5 border border-white/10 rounded-3xl p-10 backdrop-blur-sm hover:bg-white/10 transition-colors duration-500">
-                <div className="w-12 h-12 rounded-xl bg-slate-500/20 flex items-center justify-center mb-6 border border-slate-500/30">
-                  <Brain className="w-6 h-6 text-slate-400" />
+            <motion.div variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true }} className="grid md:grid-cols-2 gap-12">
+              <motion.div variants={cardVariants} whileHover={{ scale: 1.02 }} className="bg-white/60 backdrop-blur-2xl rounded-[3rem] p-12 border border-white/80 shadow-[0_30px_60px_rgba(0,0,0,0.05)] transition-all relative overflow-hidden group">
+                <div className="absolute -right-20 -top-20 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl group-hover:bg-amber-400/20 transition-colors duration-500" />
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-50 to-white flex items-center justify-center mb-10 border border-amber-200 shadow-sm relative z-10">
+                  <Brain className="w-8 h-8 text-amber-600" />
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-white">The Chronic Procrastinator</h3>
-                <p className="text-slate-400 leading-relaxed font-medium mb-8 text-[15px]">
-                  You know what you need to do, but you just can't get yourself to do it. You don't need a louder alarm clock; you need to understand the underlying anxiety or fatigue triggering the avoidance.
+                <h3 className="text-4xl font-black mb-6 text-slate-900 tracking-tighter relative z-10">The Ambitious Procrastinator</h3>
+                <p className="text-slate-600 leading-relaxed font-medium mb-10 text-xl relative z-10">
+                  You know exactly what you should be doing, yet you are paralyzed. You don&apos;t lack discipline; you lack visibility into the underlying triggers—like hidden fatigue or overwhelm—forcing you into avoidance.
                 </p>
-                <ul className="space-y-4">
-                  <li className="flex items-center gap-3 text-sm text-slate-300 font-medium bg-white/5 p-3 rounded-lg border border-white/5"><CheckCircle className="w-4 h-4 text-slate-400" /> Identifies hidden avoidance triggers</li>
-                  <li className="flex items-center gap-3 text-sm text-slate-300 font-medium bg-white/5 p-3 rounded-lg border border-white/5"><CheckCircle className="w-4 h-4 text-slate-400" /> Suggests low-friction starting steps</li>
-                </ul>
+                <div className="space-y-4 relative z-10">
+                  <div className="flex items-center gap-4 text-lg text-slate-800 font-bold bg-white/80 p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    <CheckCircle className="w-6 h-6 text-amber-500" />
+                    Decodes the real reasons you avoid work
+                  </div>
+                </div>
               </motion.div>
 
-              <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} transition={{ delay: 0.2 }} variants={fadeUpVariant} className="bg-white/5 border border-white/10 rounded-3xl p-10 backdrop-blur-sm hover:bg-white/10 transition-colors duration-500">
-                <div className="w-12 h-12 rounded-xl bg-rose-500/20 flex items-center justify-center mb-6 border border-rose-500/30">
-                  <Activity className="w-6 h-6 text-rose-400" />
+              <motion.div variants={cardVariants} whileHover={{ scale: 1.02 }} className="bg-white/60 backdrop-blur-2xl rounded-[3rem] p-12 border border-white/80 shadow-[0_30px_60px_rgba(0,0,0,0.05)] transition-all relative overflow-hidden group">
+                <div className="absolute -right-20 -top-20 w-64 h-64 bg-rose-400/10 rounded-full blur-3xl group-hover:bg-rose-400/20 transition-colors duration-500" />
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-rose-50 to-white flex items-center justify-center mb-10 border border-rose-200 shadow-sm relative z-10">
+                  <Activity className="w-8 h-8 text-rose-600" />
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-white">The Burnt-Out High Achiever</h3>
-                <p className="text-slate-400 leading-relaxed font-medium mb-8 text-[15px]">
-                  You push yourself too hard and inevitably crash. You need a system that detects the early warning signs of burnout—like subtle shifts in your sleep or mood—before you hit the wall completely.
+                <h3 className="text-4xl font-black mb-6 text-slate-900 tracking-tighter relative z-10">The Burnt-Out Achiever</h3>
+                <p className="text-slate-600 leading-relaxed font-medium mb-10 text-xl relative z-10">
+                  You sprint until you completely shatter. You require a system that detects the subtle microscopic cracks in your routine—slight sleep deficits, mood drops—long before the inevitable crash occurs.
                 </p>
-                <ul className="space-y-4">
-                  <li className="flex items-center gap-3 text-sm text-slate-300 font-medium bg-white/5 p-3 rounded-lg border border-white/5"><CheckCircle className="w-4 h-4 text-rose-400" /> Correlates workload with energy crashes</li>
-                  <li className="flex items-center gap-3 text-sm text-slate-300 font-medium bg-white/5 p-3 rounded-lg border border-white/5"><CheckCircle className="w-4 h-4 text-rose-400" /> Enforces proactive recovery experiments</li>
-                </ul>
+                <div className="space-y-4 relative z-10">
+                  <div className="flex items-center gap-4 text-lg text-slate-800 font-bold bg-white/80 p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    <CheckCircle className="w-6 h-6 text-rose-500" />
+                    Prescribes proactive recovery protocols
+                  </div>
+                </div>
               </motion.div>
-            </div>
+            </motion.div>
           </div>
         </section>
 
-        {/* STATIC CONTENT: Features Grid */}
-        <section className="py-32 px-6 bg-white border-y border-slate-200/60">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-20">
-              <h2 className="text-4xl font-extrabold tracking-tight mb-4 text-slate-900">Designed for self-awareness.</h2>
-              <p className="text-lg text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed">Standard habit trackers only tell you what you did. FixMe tells you why you did it.</p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUpVariant} className="bg-slate-50/80 p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-200/60 mb-6">
-                  <ListTodo className="w-6 h-6 text-slate-700" />
-                </div>
-                <h3 className="text-xl font-bold mb-3 tracking-tight text-slate-900">Frictionless Logging</h3>
-                <p className="text-slate-600 leading-relaxed font-medium text-[15px]">Just type what went wrong. Our AI extracts the mood, energy levels, and categorizes the problem instantly.</p>
-              </motion.div>
-              
-              <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} transition={{ delay: 0.2 }} variants={fadeUpVariant} className="bg-slate-50/80 p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-200/60 mb-6">
-                  <LineChart className="w-6 h-6 text-slate-700" />
-                </div>
-                <h3 className="text-xl font-bold mb-3 tracking-tight text-slate-900">Hidden Correlations</h3>
-                <p className="text-slate-600 leading-relaxed font-medium text-[15px]">Discover that your procrastination on Tuesdays is actually linked to your sleep schedule on Mondays.</p>
-              </motion.div>
-
-              <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} transition={{ delay: 0.4 }} variants={fadeUpVariant} className="bg-slate-50/80 p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-200/60 mb-6">
-                  <Brain className="w-6 h-6 text-slate-700" />
-                </div>
-                <h3 className="text-xl font-bold mb-3 tracking-tight text-slate-900">Smart Experiments</h3>
-                <p className="text-slate-600 leading-relaxed font-medium text-[15px]">Stop making generic goals. Get personalized, 3-day micro-experiments designed specifically for your habits.</p>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
-        {/* STATIC CONTENT: Comparison */}
-        <section className="py-32 px-6 bg-[#FAFAFA]">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-4xl font-extrabold tracking-tight mb-16 text-slate-900">The old way vs. The FixMe way</h2>
+        {/* SECTION 5: Comparison */}
+        <section className="py-40 px-6">
+          <div className="max-w-5xl mx-auto text-center">
+            <motion.h2 initial="hidden" whileInView="visible" viewport={{ once: true }} variants={cardVariants} className="text-5xl md:text-7xl font-black tracking-tighter mb-20 text-slate-900">
+              The Matrix vs. Reality
+            </motion.h2>
             
             <div className="grid md:grid-cols-2 gap-8 text-left">
-              <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="bg-white/60 p-8 rounded-3xl border border-slate-200/60 opacity-80 backdrop-blur-sm">
-                <h3 className="font-bold text-slate-400 mb-6 uppercase tracking-widest text-sm">Other Apps</h3>
-                <ul className="space-y-4">
-                  <li className="flex items-start gap-3">
-                    <XCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-                    <span className="text-slate-600 font-medium">"You missed the gym today."</span>
+              <motion.div initial={{ opacity: 0, x: -50, rotateY: 10 }} whileInView={{ opacity: 1, x: 0, rotateY: 0 }} viewport={{ once: true }} transition={{ type: "spring", stiffness: 100 }} className="bg-white/40 p-12 rounded-[3rem] border border-white/60 shadow-[0_20px_40px_rgba(0,0,0,0.03)] backdrop-blur-xl">
+                <h3 className="font-black text-slate-400 mb-10 uppercase tracking-widest text-lg flex items-center gap-3">
+                  <span className="w-3 h-3 rounded-full bg-slate-300" /> Legacy Trackers
+                </h3>
+                <ul className="space-y-8">
+                  <li className="flex items-start gap-6">
+                    <XCircle className="w-8 h-8 text-slate-300 shrink-0 mt-1" />
+                    <span className="text-slate-500 font-medium text-xl leading-relaxed">Makes you feel intensely guilty when you break an arbitrary streak.</span>
                   </li>
-                  <li className="flex items-start gap-3">
-                    <XCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-                    <span className="text-slate-600 font-medium">Forces you to manually track 15 different habits.</span>
+                  <li className="flex items-start gap-6">
+                    <XCircle className="w-8 h-8 text-slate-300 shrink-0 mt-1" />
+                    <span className="text-slate-500 font-medium text-xl leading-relaxed">Forces you to manually check off 15 different micro-habits daily.</span>
                   </li>
-                  <li className="flex items-start gap-3">
-                    <XCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-                    <span className="text-slate-600 font-medium">Makes you feel guilty for breaking a streak.</span>
+                  <li className="flex items-start gap-6">
+                    <XCircle className="w-8 h-8 text-slate-300 shrink-0 mt-1" />
+                    <span className="text-slate-500 font-medium text-xl leading-relaxed">Tells you <span className="italic">what</span> you missed, but never explains <span className="italic">why</span>.</span>
                   </li>
                 </ul>
               </motion.div>
               
-              <motion.div initial={{ opacity: 0, x: 50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="bg-white p-8 rounded-3xl border border-slate-200/50 shadow-[0_30px_60px_-15px_rgba(148,163,184,0.15)] ring-1 ring-slate-500/10 backdrop-blur-xl">
-                <h3 className="font-bold text-slate-800 mb-6 uppercase tracking-widest text-sm">FixMe</h3>
-                <ul className="space-y-4">
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
-                    <span className="text-slate-800 font-semibold text-[15px]">"You missed the gym because you slept late."</span>
+              <motion.div initial={{ opacity: 0, x: 50, rotateY: -10 }} whileInView={{ opacity: 1, x: 0, rotateY: 0 }} viewport={{ once: true }} transition={{ type: "spring", stiffness: 100 }} className="bg-slate-900 p-12 rounded-[3rem] shadow-[0_40px_80px_rgba(0,0,0,0.2)] relative overflow-hidden group border border-slate-700">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-rose-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <h3 className="font-black text-white mb-10 uppercase tracking-widest text-lg relative z-10 flex items-center gap-3">
+                  <span className="w-3 h-3 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.8)]" /> FixMe OS
+                </h3>
+                <ul className="space-y-8 relative z-10">
+                  <li className="flex items-start gap-6">
+                    <CheckCircle className="w-8 h-8 text-amber-400 shrink-0 mt-1" />
+                    <span className="text-slate-200 font-medium text-xl leading-relaxed">Log your struggles in plain English. The AI does the heavy analytical lifting.</span>
                   </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
-                    <span className="text-slate-800 font-semibold text-[15px]">Log one sentence a day. AI does the heavy lifting.</span>
+                  <li className="flex items-start gap-6">
+                    <CheckCircle className="w-8 h-8 text-amber-400 shrink-0 mt-1" />
+                    <span className="text-slate-200 font-medium text-xl leading-relaxed">Exposes the deeply hidden correlations destroying your productivity.</span>
                   </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
-                    <span className="text-slate-800 font-semibold text-[15px]">Helps you run experiments to actually fix the root cause.</span>
+                  <li className="flex items-start gap-6">
+                    <CheckCircle className="w-8 h-8 text-amber-400 shrink-0 mt-1" />
+                    <span className="text-slate-200 font-medium text-xl leading-relaxed">Generates highly targeted micro-experiments to fundamentally rewrite your code.</span>
                   </li>
                 </ul>
               </motion.div>
@@ -384,13 +406,13 @@ export function LandingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="py-12 px-6 border-t border-slate-200 bg-white relative z-10">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2 font-bold text-lg tracking-tight">
-            <Brain className="w-5 h-5 text-slate-800" />
+      <footer className="py-16 px-6 border-t border-white/40 bg-white/40 backdrop-blur-xl relative z-10">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex items-center gap-3 font-black text-2xl tracking-tighter text-slate-900">
+            <Brain className="w-8 h-8 text-amber-500" />
             <span>FixMe</span>
           </div>
-          <div className="text-slate-500 text-sm font-medium">
+          <div className="text-slate-500 text-lg font-bold">
             © {new Date().getFullYear()} FixMe OS. Built for self-improvement.
           </div>
         </div>

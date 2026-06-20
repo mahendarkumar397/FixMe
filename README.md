@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BetterMe
+
+BetterMe is an AI-powered personal coaching and self-improvement platform designed to help you track habits, solve problems, and achieve personal growth through actionable insights and a dedicated AI assistant.
+
+## Features
+
+- 🧠 **AI Coach**: Chat with an intelligent, context-aware AI coach powered by OpenAI.
+- 📊 **Insight Dashboard**: Visualize your progress and habits using intuitive charts.
+- 🔥 **Consistency Heatmap**: Track your daily streaks and build lasting routines.
+- 📝 **Log Entries**: Record your daily progress, thoughts, and reflections.
+- 🔐 **Authentication**: Secure user authentication and data management via Supabase.
+- ✨ **Modern UI**: Built with Next.js 16, Tailwind CSS, shadcn/ui, and Framer Motion for a stunning, responsive user experience.
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Styling**: Tailwind CSS & Framer Motion
+- **UI Components**: shadcn/ui, Lucide React
+- **Database & Auth**: Supabase
+- **AI Integration**: Vercel AI SDK & OpenAI
+- **Charts**: Recharts
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Node.js 18+
+- npm, yarn, pnpm, or bun
+- A Supabase account and project
+- An OpenAI API Key
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd betterme
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-## Learn More
+3. Set up environment variables:
+   Create a `.env.local` file in the root directory and add the necessary environment variables:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   OPENAI_API_KEY=your_openai_api_key
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+5. Open [http://localhost:3000](http://localhost:3000) with your browser to see the app in action.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Contributing
 
-## Deploy on Vercel
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is open-source and available under the MIT License.

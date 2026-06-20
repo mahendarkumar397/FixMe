@@ -5,9 +5,9 @@ import { Label } from "@/components/ui/label"
 import { Brain, ArrowRight, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { login } from "./actions"
+import { signup } from "../login/actions"
 
-export default async function LoginPage({
+export default async function SignupPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -30,18 +30,18 @@ export default async function LoginPage({
             <span>FixMe OS</span>
           </div>
           <div className="space-y-1">
-            <h1 className="text-3xl font-black tracking-tighter text-slate-900">Welcome back</h1>
+            <h1 className="text-3xl font-black tracking-tighter text-slate-900">Initialize your account</h1>
             <p className="text-base font-medium text-slate-600">
-              Sign in to continue analyzing your patterns.
+              Start decoding your patterns today.
             </p>
           </div>
         </div>
 
         <Card className="border-4 border-white bg-white/80 backdrop-blur-2xl shadow-[0_30px_60px_rgba(0,0,0,0.08)] rounded-[2.5rem] overflow-hidden">
           <CardHeader className="space-y-1 px-8 pt-8 pb-4">
-            <CardTitle className="text-2xl font-black text-slate-900 tracking-tight">Sign in</CardTitle>
+            <CardTitle className="text-2xl font-black text-slate-900 tracking-tight">Sign up</CardTitle>
             <CardDescription className="text-slate-500 font-medium text-sm">
-              Enter your email and password to access your account
+              Enter your email and password below
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 px-8 pb-8">
@@ -64,15 +64,7 @@ export default async function LoginPage({
                 />
               </div>
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="font-bold text-slate-700 ml-1">Password</Label>
-                  <Link
-                    href="#"
-                    className="text-sm font-bold text-amber-600 hover:text-amber-700 transition-colors"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
+                <Label htmlFor="password" className="font-bold text-slate-700 ml-1">Password</Label>
                 <Input
                   id="password"
                   name="password"
@@ -82,8 +74,8 @@ export default async function LoginPage({
                 />
               </div>
               <div className="flex flex-col gap-2 pt-4">
-                <Button formAction={login} type="submit" className="w-full group h-14 bg-slate-900 text-white hover:bg-slate-800 rounded-2xl text-lg font-bold shadow-[0_10px_20px_rgba(0,0,0,0.1)] border-2 border-slate-800 transition-all">
-                  Sign In
+                <Button formAction={signup} type="submit" className="w-full group h-14 bg-slate-900 text-white hover:bg-slate-800 rounded-2xl text-lg font-bold shadow-[0_10px_20px_rgba(0,0,0,0.1)] border-2 border-slate-800 transition-all">
+                  Create Account
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Button>
               </div>
@@ -91,9 +83,9 @@ export default async function LoginPage({
           </CardContent>
           <CardFooter className="flex justify-center border-t-2 border-slate-100 bg-[#FDFBF7]/50 p-6">
             <p className="text-base font-medium text-slate-600">
-              Don&apos;t have an account?{" "}
-              <Link href="/signup" className="font-black text-amber-600 hover:text-amber-700 transition-colors">
-                Sign up
+              Already have an account?{" "}
+              <Link href="/login" className="font-black text-amber-600 hover:text-amber-700 transition-colors">
+                Sign in
               </Link>
             </p>
           </CardFooter>
