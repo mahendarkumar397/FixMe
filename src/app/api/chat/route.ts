@@ -93,7 +93,7 @@ CONTEXT (The user's recent data):
       temperature: 0.3,
     });
 
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
 
   } catch (error: any) {
     console.error('Error in chat route:', error);
