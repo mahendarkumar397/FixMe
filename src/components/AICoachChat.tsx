@@ -1,24 +1,68 @@
 'use client';
 
-import { useChat } from '@ai-sdk/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, X, Send, User, Brain, Loader2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
+type Message = {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+};
+
 export default function AICoachChat() {
   const [isOpen, setIsOpen] = useState(false);
-  const { messages, sendMessage, status } = useChat({
-    api: '/api/chat',
-  });
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const isLoading = status === 'submitted' || status === 'streaming';
-
-  const submitMessage = () => {
+  const submitMessage = async () => {
     if (!input.trim() || isLoading) return;
-    sendMessage({ role: 'user', content: input });
+    
+    const userMessage: Message = { id: Date.now().toString(), role: 'user', content: input };
+    const updatedMessages = [...messages, userMessage];
+    
+    setMessages(updatedMessages);
     setInput('');
+    setIsLoading(true);
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: updatedMessages }),
+      });
+
+      if (!res.ok) throw new Error(res.statusText);
+      if (!res.body) throw new Error('No response body');
+
+      const assistantMessage: Message = { id: (Date.now() + 1).toString(), role: 'assistant', content: '' };
+      setMessages((prev) => [...prev, assistantMessage]);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        
+        setMessages((prev) => {
+          const newMessages = [...prev];
+          const lastIndex = newMessages.length - 1;
+          newMessages[lastIndex] = {
+            ...newMessages[lastIndex],
+            content: newMessages[lastIndex].content + chunk,
+          };
+          return newMessages;
+        });
+      }
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -120,7 +164,7 @@ export default function AICoachChat() {
                   </div>
                 </div>
               ))}
-              {isLoading && messages.length > 0 && messages[messages.length - 1].role === 'user' && (
+              {isLoading && (
                  <div className="flex justify-start">
                    <div className="bg-white border border-slate-100 rounded-2xl rounded-tl-sm px-5 py-4 shadow-sm flex items-center gap-2">
                      <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
