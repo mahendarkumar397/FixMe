@@ -1,5 +1,6 @@
+import { ratelimit } from '@/lib/ratelimit';
 import { createOpenAI } from '@ai-sdk/openai';
-import { streamText, Message } from 'ai';
+import { streamText } from 'ai';
 import { createClient } from '@/utils/supabase/server';
 
 const openrouter = createOpenAI({
@@ -15,6 +16,20 @@ const openrouter = createOpenAI({
 
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const { success, limit, reset, remaining } = await ratelimit.limit(`ratelimit_${ip}`);
+
+    if (!success) {
+      return new Response('Too many requests', {
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': limit.toString(),
+          'X-RateLimit-Remaining': remaining.toString(),
+          'X-RateLimit-Reset': reset.toString(),
+        },
+      });
+    }
+
     const { messages } = await req.json();
 
     const supabase = await createClient();

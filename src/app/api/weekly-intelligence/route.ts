@@ -1,3 +1,4 @@
+import { ratelimit } from '@/lib/ratelimit';
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { createClient } from '@/utils/supabase/server';
@@ -13,6 +14,23 @@ const openai = new OpenAI({
 
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const { success, limit, reset, remaining } = await ratelimit.limit(`ratelimit_${ip}`);
+
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': limit.toString(),
+            'X-RateLimit-Remaining': remaining.toString(),
+            'X-RateLimit-Reset': reset.toString(),
+          },
+        }
+      );
+    }
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
