@@ -1,7 +1,10 @@
 import { generateObject } from 'ai';
-import { google } from '@ai-sdk/google';
+import { createOpenAI } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
+
+// Allow up to 60 seconds for the function to execute (Vercel free tier limit)
+export const maxDuration = 60;
 
 // Supabase Setup
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -74,8 +77,13 @@ export async function POST(req: Request) {
     }
 
     // 2. Process message with Google Gemini
+    const openrouter = createOpenAI({
+      baseURL: 'https://openrouter.ai/api/v1',
+      apiKey: process.env.OPENROUTER_API_KEY,
+    });
+
     const result = await generateObject({
-      model: google('gemini-1.5-flash'), // Using the fast, free-tier eligible model
+      model: openrouter('openai/gpt-4o-mini'), // Using OpenRouter with GPT-4o-mini
       schema: z.object({
         replyMessage: z.string().describe('The friendly text response to send back to the user via WhatsApp. Keep it concise.'),
         isFoodLog: z.boolean().describe('Whether the user is explicitly logging a meal or food'),
