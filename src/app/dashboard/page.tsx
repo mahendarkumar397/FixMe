@@ -4,6 +4,7 @@ import Link from "next/link"
 import ProblemSolverSection from "@/components/ProblemSolverSection"
 import WeeklyIntelligenceCard from "@/components/WeeklyIntelligenceCard"
 import ConsistencyHeatmap from "@/components/ConsistencyHeatmap"
+import ExportCsvButton from "@/components/ExportCsvButton"
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -85,9 +86,12 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-2">Welcome back.</h1>
-        <p className="text-slate-500 font-medium">Here's what your data is telling us this week.</p>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-2">Welcome back.</h1>
+          <p className="text-slate-500 font-medium">Here's what your data is telling us this week.</p>
+        </div>
+        <ExportCsvButton data={safeLogs} filename="fixme_logs.csv" />
       </div>
 
       {/* Full-width Heatmap */}

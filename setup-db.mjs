@@ -40,6 +40,15 @@ BEGIN
 END $$;
 
 
+create table if not exists meals (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) not null,
+  food_description text not null,
+  calories integer not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+
 create table if not exists weekly_insights (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users(id) not null,
@@ -66,13 +75,25 @@ create table if not exists profiles (
   current_streak integer default 0,
   longest_streak integer default 0,
   last_log_date date,
+  whatsapp_number text unique,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- Alter table to add whatsapp_number if table already existed without it
+DO $$
+BEGIN
+  BEGIN
+    ALTER TABLE profiles ADD COLUMN whatsapp_number text unique;
+  EXCEPTION
+    WHEN duplicate_column THEN NULL;
+  END;
+END $$;
 
 alter table logs enable row level security;
 alter table weekly_insights enable row level security;
 alter table experiments enable row level security;
 alter table profiles enable row level security;
+alter table meals enable row level security;
 
 -- Drop policies if they exist so this script is idempotent
 DO $$
@@ -88,6 +109,8 @@ BEGIN
     DROP POLICY IF EXISTS "Users can insert their own profiles." ON profiles;
     DROP POLICY IF EXISTS "Users can update their own profiles." ON profiles;
     DROP POLICY IF EXISTS "Anyone can view weekly_insights by id" ON weekly_insights;
+    DROP POLICY IF EXISTS "Users can view their own meals." ON meals;
+    DROP POLICY IF EXISTS "Users can insert their own meals." ON meals;
 EXCEPTION
     WHEN undefined_object THEN null;
 END $$;
@@ -124,6 +147,12 @@ create policy "Users can insert their own profiles." on profiles
 
 create policy "Users can update their own profiles." on profiles
   for update using (auth.uid() = id);
+
+create policy "Users can view their own meals." on meals
+  for select using (auth.uid() = user_id);
+
+create policy "Users can insert their own meals." on meals
+  for insert with check (auth.uid() = user_id);
 `;
 
 async function main() {
