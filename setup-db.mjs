@@ -3,7 +3,7 @@ import pg from 'pg';
 const { Client } = pg;
 
 const client = new Client({
-  connectionString: 'postgresql://postgres:Fixmemahendar123!@@db.sfelwfidldcvltiyvvcn.supabase.co:5432/postgres',
+  connectionString: 'postgresql://postgres:Fixmemahendar123!@db.sfelwfidldcvltiyvvcn.supabase.co:5432/postgres',
 });
 
 const query = `

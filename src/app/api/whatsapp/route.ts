@@ -69,8 +69,8 @@ export async function POST(req: Request) {
       .single();
 
     if (profileError || !profile) {
-      await sendWhatsAppMessage(fromNumber, "Hi! I'm the BetterMe AI Coach. I don't recognize this number. Please add this WhatsApp number to your BetterMe profile to start logging habits!");
-      return new Response('OK', { status: 200 });
+      console.warn('Phone number not linked to a user. Skipping DB insert, but will still reply.');
+      // Proceed without profile. We just won't insert into `meals` later.
     }
 
     // 2. Process message with Google Gemini
@@ -86,15 +86,20 @@ export async function POST(req: Request) {
     });
 
     const aiData = result.object;
+    const { isFoodLog, calories, foodDescription, replyMessage } = aiData;
 
     // 3. Save to database
-    if (aiData.isFoodLog && aiData.calories !== null) {
-      await supabase.from('meals').insert({
-        user_id: profile.id,
-        food_description: aiData.foodDescription || messageText,
-        calories: aiData.calories
-      });
-    } else {
+    if (isFoodLog && calories) {
+      if (profile?.id) {
+        await supabase.from('meals').insert({
+          user_id: profile.id,
+          food_description: foodDescription || 'Logged via WhatsApp',
+          calories: calories
+        });
+      } else {
+        console.warn('No user profile found, skipping calorie save to database.');
+      }
+    } else if (profile?.id) {
       await supabase.from('logs').insert({
         user_id: profile.id,
         content: messageText,
