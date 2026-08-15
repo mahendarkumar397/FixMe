@@ -3,8 +3,8 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 
-// Allow up to 60 seconds for the function to execute (Vercel free tier limit)
-export const maxDuration = 60;
+// Use Edge Runtime for background execution via ctx.waitUntil()
+export const runtime = 'edge';
 
 // Supabase Setup
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -36,11 +36,10 @@ export async function GET(req: Request) {
 /**
  * Handle Incoming WhatsApp Messages (POST)
  */
-export async function POST(req: Request) {
+export async function POST(req: Request, ctx: any) {
   try {
     const body = await req.json();
 
-    // Verify this is a WhatsApp status/message payload
     if (body.object !== 'whatsapp_business_account') {
       return new Response('Not a WhatsApp payload', { status: 404 });
     }
@@ -49,79 +48,70 @@ export async function POST(req: Request) {
     const changes = entry?.changes?.[0];
     const message = changes?.value?.messages?.[0];
 
-    // If it's just a status update (read/delivered), return 200 to acknowledge
     if (!message || message.type !== 'text') {
       return new Response('OK', { status: 200 });
     }
 
-    // Extract message data
-    const fromNumber = message.from; // e.g., '14155551234' (no +)
+    const fromNumber = message.from;
     const messageText = message.text?.body;
 
     if (!messageText) {
-      return new Response('Unsupported message type', { status: 200 });
+      return new Response('OK', { status: 200 });
     }
 
-    // Process everything immediately. maxDuration=60 allows us up to 60s.
-    try {
-      // 1. Authenticate user by phone number
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, whatsapp_number')
-        .or(`whatsapp_number.eq.${fromNumber},whatsapp_number.eq.+${fromNumber}`)
-        .single();
+    // Process everything in the background using Edge runtime's waitUntil
+    const backgroundTask = async () => {
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, whatsapp_number')
+          .or(`whatsapp_number.eq.${fromNumber},whatsapp_number.eq.+${fromNumber}`)
+          .single();
 
-      if (profileError || !profile) {
-        console.warn('Phone number not linked to a user. Skipping DB insert, but will still reply.');
-      }
+        const openrouter = createOpenAI({
+          baseURL: 'https://openrouter.ai/api/v1',
+          apiKey: process.env.OPENROUTER_API_KEY,
+        });
 
-      // 2. Process message with AI via OpenRouter
-      const openrouter = createOpenAI({
-        baseURL: 'https://openrouter.ai/api/v1',
-        apiKey: process.env.OPENROUTER_API_KEY,
-      });
+        const result = await generateObject({
+          model: openrouter('openai/gpt-4o-mini'), 
+          schema: z.object({
+            replyMessage: z.string().describe('The friendly text response to send back to the user via WhatsApp. Keep it concise.'),
+            isFoodLog: z.boolean().describe('Whether the user is explicitly logging a meal or food'),
+            calories: z.number().nullable().describe('The estimated calories if it is a food log, otherwise null'),
+            foodDescription: z.string().nullable().describe('A short description of the food logged')
+          }),
+          prompt: `You are the BetterMe AI coach. The user sent: "${messageText}"\n\nIf they are logging food, estimate the calories. If they are just chatting, reply normally as an encouraging coach. Keep responses concise for WhatsApp.`,
+        });
 
-      const result = await generateObject({
-        model: openrouter('openai/gpt-4o-mini'), 
-        schema: z.object({
-          replyMessage: z.string().describe('The friendly text response to send back to the user via WhatsApp. Keep it concise.'),
-          isFoodLog: z.boolean().describe('Whether the user is explicitly logging a meal or food'),
-          calories: z.number().nullable().describe('The estimated calories if it is a food log, otherwise null'),
-          foodDescription: z.string().nullable().describe('A short description of the food logged')
-        }),
-        prompt: `You are the BetterMe AI coach. The user sent: "${messageText}"\n\nIf they are logging food, estimate the calories. If they are just chatting, reply normally as an encouraging coach. Keep responses concise for WhatsApp.`,
-      });
+        const aiData = result.object;
+        const { isFoodLog, calories, foodDescription, replyMessage } = aiData;
 
-      const aiData = result.object;
-      const { isFoodLog, calories, foodDescription, replyMessage } = aiData;
-
-      // 3. Save to database
-      if (isFoodLog && calories) {
-        if (profile?.id) {
+        if (isFoodLog && calories && profile?.id) {
           await supabase.from('meals').insert({
             user_id: profile.id,
             food_description: foodDescription || 'Logged via WhatsApp',
             calories: calories
           });
-        } else {
-          console.warn('No user profile found, skipping calorie save to database.');
+        } else if (profile?.id) {
+          await supabase.from('logs').insert({
+            user_id: profile.id,
+            content: messageText,
+            category: 'whatsapp_chat'
+          });
         }
-      } else if (profile?.id) {
-        await supabase.from('logs').insert({
-          user_id: profile.id,
-          content: messageText,
-          category: 'whatsapp_chat'
-        });
+
+        await sendWhatsAppMessage(fromNumber, replyMessage);
+
+      } catch (err) {
+        console.error('Background task error:', err);
       }
+    };
 
-      // 4. Send Meta API reply
-      await sendWhatsAppMessage(fromNumber, replyMessage);
+    // Tell Vercel to keep the Edge function alive until the background task finishes
+    ctx.waitUntil(backgroundTask());
 
-    } catch (err) {
-      console.error('Task error:', err);
-    }
-
-    // Return 200 quickly so Meta knows we received it
+    // Return 200 quickly so Meta knows we received it instantly
     return new Response('OK', { status: 200 });
 
   } catch (error) {
