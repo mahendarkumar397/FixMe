@@ -26,7 +26,7 @@ export async function GET(req: Request) {
   const challenge = url.searchParams.get('hub.challenge');
 
   if (mode === 'subscribe' && token === META_VERIFY_TOKEN) {
-    console.log('Meta Webhook Verified!');
+    console.log('Webhook verified successfully!');
     return new Response(challenge, { status: 200 });
   } else {
     return new Response('Forbidden', { status: 403 });
@@ -47,11 +47,10 @@ export async function POST(req: Request) {
 
     const entry = body.entry?.[0];
     const changes = entry?.changes?.[0];
-    const value = changes?.value;
-    const message = value?.messages?.[0];
+    const message = changes?.value?.messages?.[0];
 
     // If it's just a status update (read/delivered), return 200 to acknowledge
-    if (!message) {
+    if (!message || message.type !== 'text') {
       return new Response('OK', { status: 200 });
     }
 
@@ -63,66 +62,70 @@ export async function POST(req: Request) {
       return new Response('Unsupported message type', { status: 200 });
     }
 
-    // 1. Authenticate user by phone number
-    // We try to match with or without the '+' prefix just in case
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('id, whatsapp_number')
-      .or(`whatsapp_number.eq.${fromNumber},whatsapp_number.eq.+${fromNumber}`)
-      .single();
+    // Process everything immediately. maxDuration=60 allows us up to 60s.
+    try {
+      // 1. Authenticate user by phone number
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, whatsapp_number')
+        .or(`whatsapp_number.eq.${fromNumber},whatsapp_number.eq.+${fromNumber}`)
+        .single();
 
-    if (profileError || !profile) {
-      console.warn('Phone number not linked to a user. Skipping DB insert, but will still reply.');
-      // Proceed without profile. We just won't insert into `meals` later.
-    }
-
-    // 2. Process message with Google Gemini
-    const openrouter = createOpenAI({
-      baseURL: 'https://openrouter.ai/api/v1',
-      apiKey: process.env.OPENROUTER_API_KEY,
-    });
-
-    const result = await generateObject({
-      model: openrouter('openai/gpt-4o-mini'), // Using OpenRouter with GPT-4o-mini
-      schema: z.object({
-        replyMessage: z.string().describe('The friendly text response to send back to the user via WhatsApp. Keep it concise.'),
-        isFoodLog: z.boolean().describe('Whether the user is explicitly logging a meal or food'),
-        calories: z.number().nullable().describe('The estimated calories if it is a food log, otherwise null'),
-        foodDescription: z.string().nullable().describe('A short description of the food logged')
-      }),
-      prompt: `You are the BetterMe AI coach. The user sent: "${messageText}"\n\nIf they are logging food, estimate the calories. If they are just chatting, reply normally as an encouraging coach. Keep responses concise for WhatsApp.`,
-    });
-
-    const aiData = result.object;
-    const { isFoodLog, calories, foodDescription, replyMessage } = aiData;
-
-    // 3. Save to database
-    if (isFoodLog && calories) {
-      if (profile?.id) {
-        await supabase.from('meals').insert({
-          user_id: profile.id,
-          food_description: foodDescription || 'Logged via WhatsApp',
-          calories: calories
-        });
-      } else {
-        console.warn('No user profile found, skipping calorie save to database.');
+      if (profileError || !profile) {
+        console.warn('Phone number not linked to a user. Skipping DB insert, but will still reply.');
       }
-    } else if (profile?.id) {
-      await supabase.from('logs').insert({
-        user_id: profile.id,
-        content: messageText,
-        category: 'whatsapp_chat'
+
+      // 2. Process message with AI via OpenRouter
+      const openrouter = createOpenAI({
+        baseURL: 'https://openrouter.ai/api/v1',
+        apiKey: process.env.OPENROUTER_API_KEY,
       });
+
+      const result = await generateObject({
+        model: openrouter('openai/gpt-4o-mini'), 
+        schema: z.object({
+          replyMessage: z.string().describe('The friendly text response to send back to the user via WhatsApp. Keep it concise.'),
+          isFoodLog: z.boolean().describe('Whether the user is explicitly logging a meal or food'),
+          calories: z.number().nullable().describe('The estimated calories if it is a food log, otherwise null'),
+          foodDescription: z.string().nullable().describe('A short description of the food logged')
+        }),
+        prompt: `You are the BetterMe AI coach. The user sent: "${messageText}"\n\nIf they are logging food, estimate the calories. If they are just chatting, reply normally as an encouraging coach. Keep responses concise for WhatsApp.`,
+      });
+
+      const aiData = result.object;
+      const { isFoodLog, calories, foodDescription, replyMessage } = aiData;
+
+      // 3. Save to database
+      if (isFoodLog && calories) {
+        if (profile?.id) {
+          await supabase.from('meals').insert({
+            user_id: profile.id,
+            food_description: foodDescription || 'Logged via WhatsApp',
+            calories: calories
+          });
+        } else {
+          console.warn('No user profile found, skipping calorie save to database.');
+        }
+      } else if (profile?.id) {
+        await supabase.from('logs').insert({
+          user_id: profile.id,
+          content: messageText,
+          category: 'whatsapp_chat'
+        });
+      }
+
+      // 4. Send Meta API reply
+      await sendWhatsAppMessage(fromNumber, replyMessage);
+
+    } catch (err) {
+      console.error('Task error:', err);
     }
 
-    // 4. Send Meta API reply
-    await sendWhatsAppMessage(fromNumber, aiData.replyMessage);
-
-    // Always return 200 quickly so Meta doesn't retry
+    // Return 200 quickly so Meta knows we received it
     return new Response('OK', { status: 200 });
 
   } catch (error) {
-    console.error('Webhook error:', error);
+    console.error('Webhook parsing error:', error);
     return new Response('Internal Server Error', { status: 500 });
   }
 }
@@ -157,5 +160,7 @@ async function sendWhatsAppMessage(to: string, text: string) {
   if (!response.ok) {
     const errText = await response.text();
     console.error('Failed to send WhatsApp message:', errText);
+  } else {
+    console.log('WhatsApp message sent successfully to', to);
   }
 }
