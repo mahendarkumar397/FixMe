@@ -123,7 +123,7 @@ async function sendWhatsAppMessage(to: string, text: string) {
     return;
   }
 
-  const url = \`https://graph.facebook.com/v19.0/\${META_PHONE_NUMBER_ID}/messages\`;
+  const url = `https://graph.facebook.com/v19.0/${META_PHONE_NUMBER_ID}/messages`;
   
   const payload = {
     messaging_product: 'whatsapp',
@@ -135,7 +135,7 @@ async function sendWhatsAppMessage(to: string, text: string) {
   const response = await fetch(url, {
     method: 'POST',
     headers: {
-      'Authorization': \`Bearer \${META_ACCESS_TOKEN}\`,
+      'Authorization': `Bearer ${META_ACCESS_TOKEN}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(payload),
