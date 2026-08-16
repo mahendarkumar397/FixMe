@@ -17,11 +17,21 @@ const META_VERIFY_TOKEN = process.env.META_VERIFY_TOKEN || 'betterme_secret_toke
 const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN || '';
 const META_PHONE_NUMBER_ID = process.env.META_PHONE_NUMBER_ID || '';
 
+// Global in-memory logger for debugging
+const requestLogs: any[] = [];
+
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const mode = url.searchParams.get('hub.mode');
   const token = url.searchParams.get('hub.verify_token');
   const challenge = url.searchParams.get('hub.challenge');
+
+  // If asking for logs
+  if (url.searchParams.get('logs') === 'true') {
+    return new Response(JSON.stringify(requestLogs, null, 2), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   if (mode === 'subscribe' && token === META_VERIFY_TOKEN) {
     return new Response(challenge, { status: 200 });
@@ -33,6 +43,10 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const bodyText = await req.text();
+    requestLogs.push({ time: new Date().toISOString(), body: bodyText });
+    // Keep only last 20 logs
+    if (requestLogs.length > 20) requestLogs.shift();
+    
     let body;
     try {
       body = JSON.parse(bodyText);
