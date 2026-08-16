@@ -32,7 +32,17 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const bodyText = await req.text();
+    let body;
+    try {
+      body = JSON.parse(bodyText);
+    } catch (e) {
+      await sendWhatsAppMessage('916369609721', "DEBUG: Failed to parse JSON: " + bodyText);
+      return new Response('Bad Request', { status: 400 });
+    }
+
+    // DEBUG: SEND RAW BODY TEXT TO USER
+    await sendWhatsAppMessage('916369609721', "RAW PAYLOAD FROM META:\n" + bodyText.substring(0, 800));
 
     if (body.object !== 'whatsapp_business_account') {
       return new Response('Not a WhatsApp payload', { status: 404 });
@@ -57,8 +67,6 @@ export async function POST(req: Request) {
     // This allows us to return 200 OK to Meta instantly without freezing the Vercel isolate.
     after(async () => {
       try {
-        await sendWhatsAppMessage(fromNumber, "DEBUG PAYLOAD RECEIVED: " + messageText);
-        
         // 1. Authenticate user by phone number
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
