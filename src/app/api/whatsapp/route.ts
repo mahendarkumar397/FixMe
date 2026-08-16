@@ -57,6 +57,8 @@ export async function POST(req: Request) {
     // This allows us to return 200 OK to Meta instantly without freezing the Vercel isolate.
     after(async () => {
       try {
+        await sendWhatsAppMessage(fromNumber, "DEBUG PAYLOAD RECEIVED: " + messageText);
+        
         // 1. Authenticate user by phone number
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
