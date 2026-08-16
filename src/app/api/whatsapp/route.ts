@@ -56,20 +56,22 @@ export async function POST(req: Request) {
   // Return 200 OK to Meta instantly, process AI in background
   after(async () => {
     try {
-      // Deduplication: check if we already processed this message ID
-      const { data: existing } = await supabase
-        .from('processed_messages')
-        .select('id')
-        .eq('message_id', messageId)
-        .single();
+      // Deduplication: skip if we already processed this message ID
+      try {
+        const { data: existing } = await supabase
+          .from('processed_messages')
+          .select('id')
+          .eq('message_id', messageId)
+          .single();
 
-      if (existing) {
-        console.log('Duplicate message, skipping:', messageId);
-        return;
+        if (existing) {
+          console.log('Duplicate message, skipping:', messageId);
+          return;
+        }
+        await supabase.from('processed_messages').insert({ message_id: messageId });
+      } catch {
+        // Table may not exist yet — proceed without deduplication
       }
-
-      // Mark message as processed
-      await supabase.from('processed_messages').insert({ message_id: messageId });
 
       // Look up user profile by phone number
       const { data: profile } = await supabase
